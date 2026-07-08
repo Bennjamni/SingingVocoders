@@ -1,6 +1,6 @@
 # Adapted from https://github.com/jik876/hifi-gan under the MIT license.
 #   LICENSE is in incl_licenses directory.
-
+# https://huggingface.co/nvidia/bigvgan_v2_44khz_128band_512x/tree/main
 import os
 import shutil
 
