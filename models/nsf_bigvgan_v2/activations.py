@@ -1,6 +1,6 @@
 # Implementation adapted from https://github.com/EdwardDixon/snake under the MIT license.
 #   LICENSE is in incl_licenses directory.
-
+# https://huggingface.co/nvidia/bigvgan_v2_44khz_128band_512x/tree/main
 import torch
 from torch import nn, sin, pow
 from torch.nn import Parameter
