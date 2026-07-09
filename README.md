@@ -163,3 +163,13 @@ python export_ckpt.py --ckpt_path (your ckpt path)  --save_path (output ckpt pat
 |:----------------:|:-----------------------------------------------------------------------|:---------------------------------------------------------------|
 | 旋转_turning_point | QQ：2673587414；<br/>Bilibili UID：285801087；<br/>Discord 用户名：colstone233 | 长期对开发者进行敌对和人身攻击，反复传播关于 DiffSinger 和开发团队的虚假信息，干扰声码器及其他社区项目的开发进程 |
 
+
+### Links
+
+- **Repositório Oficial (Código):** [NVIDIA/BigVGAN no GitHub](https://github.com/NVIDIA/BigVGAN)
+- **Modelo Pré-treinado (44.1kHz / 128band / 512x):** [nvidia/bigvgan_v2_44khz_128band_512x no Hugging Face](https://huggingface.co/nvidia/bigvgan_v2_44khz_128band_512x)
+- **Artigo Científico:** [BigVGAN: A Universal Neural Vocoder with Large-Scale Training](https://arxiv.org/abs/2206.04658)
+
+This repository has been expanded to support native integration of NVIDIA's official **BigVGAN V2**, bringing the quality of sung voice synthesis (SVS) up to the state-of-the-art.
+
+
