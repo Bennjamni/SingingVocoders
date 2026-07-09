@@ -136,8 +136,9 @@ We solemnly declare:
 
 ### Links
 
-- **Repositório Oficial (Código):** [NVIDIA/BigVGAN no GitHub](https://github.com/NVIDIA/BigVGAN)
-- **Modelo Pré-treinado (44.1kHz / 128band / 512x):** [nvidia/bigvgan_v2_44khz_128band_512x no Hugging Face](https://huggingface.co/nvidia/bigvgan_v2_44khz_128band_512x)
-- **Artigo Científico:** [BigVGAN: A Universal Neural Vocoder with Large-Scale Training](https://arxiv.org/abs/2206.04658)
+- [NVIDIA/BigVGAN no GitHub](https://github.com/NVIDIA/BigVGAN)
+- [nvidia/bigvgan_v2_44khz_128band_512x no Hugging Face](https://huggingface.co/nvidia/bigvgan_v2_44khz_128band_512x)
+- [BigVGAN: A Universal Neural Vocoder with Large-Scale Training](https://arxiv.org/abs/2206.04658)
+- [BigVGAN with Neural Source-Filter ](https://github.com/PlayVoice/BigVGAN)
 
 This repository has been expanded to support native integration of NVIDIA's official **BigVGAN V2**, bringing the quality of sung voice synthesis (SVS) up to the state-of-the-art.
