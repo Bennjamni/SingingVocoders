@@ -9,6 +9,8 @@ class BigVGANv2Loss(nn.Module):
     Classe de Perda para o NSF-BigVGAN V2 integrado ao DiffSinger.
     Combina as perdas adversariais (LSGAN) e Feature Matching do BigVGAN
     com as perdas auxiliares (Mel + Multi-Resolution STFT) do ecossistema DiffSinger.
+    
+    Otimizado para suportar PC-Augmentation, Key Augmentation e Volume Augmentation.
     """
     def __init__(self, config: dict):
         super().__init__()
@@ -17,13 +19,16 @@ class BigVGANv2Loss(nn.Module):
         # 1. Extrator de Mel (Padrão DiffSinger)
         # ==========================================
         # Usa os parâmetros do YAML (44.1kHz, 128 bins, hop 512, fmin 40, fmax 16000)
+        # O fmax_for_loss é usado se existir, senão usa o fmax padrão.
+        fmax_loss = config.get('fmax_for_loss', None) or config.get('fmax', 16000)
+        
         self.mel = PitchAdjustableMelSpectrogram(
             sample_rate=config['audio_sample_rate'],
             n_fft=config['fft_size'],
             win_length=config['win_size'],
             hop_length=config['hop_size'],
             f_min=config['fmin'],
-            f_max=config['fmax_for_loss'], # Usa fmax_for_loss se existir, senão fmax
+            f_max=fmax_loss,
             n_mels=config['audio_num_mel_bins'],
         )
         
@@ -37,13 +42,13 @@ class BigVGANv2Loss(nn.Module):
         # 2. Extrator de STFT (Multi-Resolution)
         # ==========================================
         # Usa as resoluções definidas no YAML para calcular a perda espectral
-        if config.get('use_stftloss', True):
+        self.use_stftloss = config.get('use_stftloss', True)
+        if self.use_stftloss:
             self.stft = warp_stft({
                 'fft_sizes': config['loss_fft_sizes'], 
                 'hop_sizes': config['loss_hop_sizes'],
                 'win_lengths': config['loss_win_lengths']
             })
-        self.use_stftloss = config.get('use_stftloss', True)
 
     # ==========================================
     # 3. Perda do Discriminador (Dloss)
@@ -56,6 +61,7 @@ class BigVGANv2Loss(nn.Module):
         loss = 0
         rlosses = 0
         glosses = 0
+        
         for (fmap_fake, score_fake), (fmap_real, score_real) in zip(disc_generated_outputs, disc_real_outputs):
             # Penaliza o discriminador se ele não der 1 para o áudio real
             r_loss = torch.mean((1 - score_real) ** 2)
@@ -89,7 +95,10 @@ class BigVGANv2Loss(nn.Module):
         loss = 0
         for dr, dg in zip(fmap_r, fmap_g):
             for rl, gl in zip(dr, dg):
-                loss += torch.mean(torch.abs(rl - gl))
+                # Garante que os shapes batam (caso haja diferença de batch size no PC-Aug)
+                b = min(rl.shape[0], gl.shape[0])
+                loss += torch.mean(torch.abs(rl[:b] - gl[:b]))
+        
         # O paper do HiFi-GAN/BigVGAN multiplica o feature loss por 2
         return loss * 2
 
@@ -123,20 +132,27 @@ class BigVGANv2Loss(nn.Module):
     def Auxloss(self, Goutput, sample):
         """
         Calcula o Mel Loss (L1) e o Multi-Resolution STFT Loss.
+        Otimizado para lidar com batches concatenados (PC-Augmentation).
         """
         wav_fake = Goutput['audio'].squeeze(1)
         wav_real = sample['audio'].squeeze(1)
         
-        # Garante que os tamanhos batam (caso haja algum padding/corte mínimo)
+        # Garante que os tamanhos batam (trunca para o menor batch/length)
         b = min(wav_fake.shape[0], wav_real.shape[0])
-        wav_fake = wav_fake[:b]
-        wav_real = wav_real[:b]
+        t = min(wav_fake.shape[1], wav_real.shape[1])
+        
+        wav_fake = wav_fake[:b, :t]
+        wav_real = wav_real[:b, :t]
         
         # --- Mel Loss ---
         # Recalcula o Mel a partir do áudio gerado e real para garantir consistência
+        # de janela e padding (padrão do ecossistema DiffSinger)
         mel_fake = self.mel.dynamic_range_compression_torch(self.mel(wav_fake))
         mel_real = self.mel.dynamic_range_compression_torch(self.mel(wav_real))
-        mel_loss = self.L1loss(mel_fake, mel_real) * self.lab_aux_mel_loss
+        
+        # Trunca os frames do Mel para garantir alinhamento perfeito
+        mel_t = min(mel_fake.shape[2], mel_real.shape[2])
+        mel_loss = self.L1loss(mel_fake[:, :, :mel_t], mel_real[:, :, :mel_t]) * self.lab_aux_mel_loss
         
         # --- STFT Loss ---
         if self.use_stftloss:
