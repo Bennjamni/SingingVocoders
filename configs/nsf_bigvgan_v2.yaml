@@ -11,7 +11,14 @@ preprocessing:
   DataIndexPath: data
   valid_set_name: valid
   train_set_name: train
-  
+
+  pc_aug: true           # Ativa a PC-Augmentation
+  pc_aug_rate: 0.4       # 40% do batch será usado para PC-Aug
+  pc_aug_key: 5          # Shift máximo de ±5 semitons
+  key_aug: true
+  key_aug_prob: 0.5
+  aug_min: 0.9
+  aug_max: 1.4
 
   volume_aug: true
   volume_aug_prob: 0.5
@@ -46,6 +53,7 @@ global constants:
 
 neural networks:
   task_cls: training.nsf_bigvgan_v2_task.nsf_bigvgan_v2_task
+  nvidia_pretrain_path: "pretrained/bigvgan_v2_44khz_128b_512hop.pt"
   
   model_args:
     # --- BigVGAN V2 Generator Args ---
